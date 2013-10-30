@@ -1,0 +1,39 @@
+{
+  "name": "click-indicator",
+  "repo": "goinstant/components",
+  "description": "GoInstant component for animated click indicators",
+  "version": "v1.0.0",
+  "keywords": [],
+  "dependencies": {
+    "lodash/lodash": "*",
+    "component/emitter": "*",
+    "caolan/async": "*",
+    "stagas/binder": "*",
+    "component/raf": "*",
+    "goinstant/colors-common": "*",
+    "goinstant/usercache": "*"
+  },
+  "development": {
+    "visionmedia/mocha": "*",
+    "component/jquery": "*"
+  },
+  "main": "index.js",
+  "scripts": [
+    "index.js",
+    "lib/indicator_handler.js",
+    "lib/indicator_view.js",
+    "lib/click_handler.js",
+    "lib/selectors.js",
+    "lib/scroll_position.js"
+  ],
+  "templates": [
+    "templates/template.html"
+  ],
+  "styles": [
+    "components.css"
+  ],
+  "images": [
+    "images/cursor.png",
+    "images/animation.png"
+  ]
+}

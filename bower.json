@@ -1,0 +1,31 @@
+{
+  "name": "goinstant-click-indicator",
+  "main": [
+    "dist/click-indicator.js",
+    "dist/click-indicator.css",
+    "dist/click-indicator/**/*"
+  ],
+  "version": "1.0.0",
+  "homepage": "https://github.com/goinstant/click-indicator",
+  "authors": [
+    "GoInstant",
+    "a salesforce.com company"
+  ],
+
+  "description": "The GoInstant Click Indicator widget provides real-time click animations for your application. This allows the local user to see where remote users click on the page.",
+  "keywords": [
+    "GoInstant",
+    "widget",
+    "click-indicator"
+  ],
+
+  "license": "BSD",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
+
