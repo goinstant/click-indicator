@@ -25,7 +25,8 @@ var SUPPORTED_OPTIONS = [
   'room',
   'namePlates',
   'element',
-  'displayTimer'
+  'displayTimer',
+  'namespace'
 ];
 
 /**
@@ -35,7 +36,8 @@ var SUPPORTED_OPTIONS = [
 var DEFAULT_OPTIONS = {
   namePlates: true,
   element: document.documentElement,
-  displayTimer: 500
+  displayTimer: 500,
+  namespace: 'goinstant-widgets-click-indicator'
 };
 
 /**
@@ -171,6 +173,10 @@ ClickIndicator.prototype._validateOptions = function(opts) {
 
   if (!_.isNumber(opts.displayTimer)) {
     throw new Error('Invalid displayTimer option.');
+  }
+
+  if(!_.isString(opts.namespace)) {
+    throw new Error('Invalid namespace option.');
   }
 
   return opts;
