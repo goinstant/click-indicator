@@ -48,7 +48,8 @@ describe('IndicatorHandler', function() {
     mockComponent = {
       _options: {
         room: mockRoom,
-        namePlates: true
+        namePlates: true,
+        namespace: 'TEST_CHANNEL_NAMESPACE'
       },
       _emitter: new Emitter(),
       _clickHandler: clickHandler,
@@ -74,6 +75,7 @@ describe('IndicatorHandler', function() {
     mockComponent._clickHandler.emit('click', data);
 
     data.element = selector;
+    sinon.assert.calledWith(mockRoom.channel, 'TEST_CHANNEL_NAMESPACE');
     sinon.assert.calledWith(mockChannel.message, data);
   });
 

@@ -17,6 +17,8 @@ var ClickHandler = require('./lib/click_handler');
 var IndicatorView = require('./lib/indicator_view');
 var IndicatorHandler = require('./lib/indicator_handler');
 
+var CHANNEL_NAMESPACE = 'goinstant-widgets-click-indicator-';
+
 /**
  * A list of supported options
  * @const
@@ -25,7 +27,8 @@ var SUPPORTED_OPTIONS = [
   'room',
   'namePlates',
   'element',
-  'displayTimer'
+  'displayTimer',
+  'namespace'
 ];
 
 /**
@@ -35,7 +38,8 @@ var SUPPORTED_OPTIONS = [
 var DEFAULT_OPTIONS = {
   namePlates: true,
   element: document.documentElement,
-  displayTimer: 500
+  displayTimer: 500,
+  namespace: ''
 };
 
 /**
@@ -53,6 +57,8 @@ var SUPPORTED_EVENTS = [
  */
 function ClickIndicator(opts) {
   this._options = this._validateOptions(opts);
+
+  this._options.namespace = CHANNEL_NAMESPACE + this._options.namespace;
 
   this._emitter = new Emitter();
 
@@ -171,6 +177,10 @@ ClickIndicator.prototype._validateOptions = function(opts) {
 
   if (!_.isNumber(opts.displayTimer)) {
     throw new Error('Invalid displayTimer option.');
+  }
+
+  if(!_.isString(opts.namespace)) {
+    throw new Error('Invalid namespace option.');
   }
 
   return opts;

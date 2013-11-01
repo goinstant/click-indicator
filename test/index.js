@@ -78,6 +78,17 @@ describe('Constructor', function() {
     }, /Invalid displayTimer option./);
   });
 
+  it('Throws if non-string namespace option is passed.', function() {
+    var opts = {
+      room: mockRoom,
+      namespace: true
+    };
+
+    assert.exception(function() {
+      clickIndicator = new ClickIndicator(opts);
+    }, /Invalid namespace option./);
+  });
+
   it('Throws if unexpected options are passed.', function() {
     var opts = {
       room: mockRoom,
