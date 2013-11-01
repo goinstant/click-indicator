@@ -130,26 +130,6 @@ describe('ClickHandler', function() {
 
   });
 
-  it('Mouse click calls validatedClick.', function() {
-    var fakeEvent = $.Event('mousedown');
-    fakeEvent.pageX = 100;
-    fakeEvent.pageY = 100;
-    fakeEvent.target = $('#mocha')[0];
-    fakeEvent.srcElement = $('#mocha')[0];
-
-    clickHandler._mouseStartHandler(fakeEvent);
-
-    assert.equal(clickHandler._startPosition.x, 100);
-    assert.equal(clickHandler._startPosition.y, 100);
-
-    fakeEvent.type = 'click';
-
-    sinon.spy(clickHandler, '_validatedClick');
-    clickHandler._validatedClick(fakeEvent);
-
-    sinon.assert.called(clickHandler._validatedClick);
-  });
-
   it('Off removes listener.', function() {
     function fakeListener() {}
     assert.equal(clickHandler._emitter.hasListeners('click'), false);
@@ -159,5 +139,63 @@ describe('ClickHandler', function() {
     assert.equal(clickHandler._emitter.hasListeners('click'), false);
   });
 
+  it('emits position, when mousedown, mouseup, and click occur', function() {
+    var handler = sinon.spy(function() {
+    });
+
+    clickHandler.on('click', handler);
+
+    var upLocation = {
+      "top": 10,
+      "left": 20
+    };
+
+    var upTarget = $('<div></div>');
+    upTarget.css('position', 'absolute');
+    upTarget.css('top', upLocation.top + 'px');
+    upTarget.css('left', upLocation.left + 'px');
+    upTarget.css('width', '100px');
+    upTarget.css('height', '100px');
+
+    var downLocation = {
+      "top": 40,
+      "left": 90
+    };
+
+    var downTarget = $('<div></div>');
+    downTarget.css('position', 'absolute');
+    downTarget.css('width', '100px');
+    downTarget.css('height', '100px');
+    downTarget.css('top', downLocation.top + 'px');
+    downTarget.css('left', downLocation.left + 'px');
+
+    $('body').append(upTarget);
+    $('body').append(downTarget);
+
+    var upEvt = {
+      target: upTarget.get(0),
+      pageX: upLocation.left,
+      pageY: upLocation.top
+    };
+
+    var downEvt = {
+      target: downTarget.get(0),
+      pageX: downLocation.left,
+      pageY: downLocation.top
+    };
+
+    clickHandler._mousedownHandler(downEvt);
+    clickHandler._mouseupHandler(upEvt);
+    clickHandler._validatedClick(downEvt);
+
+    sinon.assert.calledOnce(handler);
+    sinon.assert.calledWith(handler, {
+      location: {
+        x: -0.7,
+        y: -0.3
+      },
+      element: downTarget.get(0)
+    });
+  });
 });
 
