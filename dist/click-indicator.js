@@ -725,7 +725,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
     var setImmediate = typeof (setImmediate = freeGlobal && moduleExports && freeGlobal.setImmediate) == 'function' &&
       !reNative.test(setImmediate) && setImmediate;
 
-    /** Used to set meta data */
+    /** Used to set meta data on functions */
     var defineProperty = (function() {
       // IE 8 only accepts DOM elements
       try {
@@ -1550,8 +1550,11 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
       var isArr = className == arrayClass;
       if (!isArr) {
         // unwrap any `lodash` wrapped values
-        if (hasOwnProperty.call(a, '__wrapped__ ') || hasOwnProperty.call(b, '__wrapped__')) {
-          return baseIsEqual(a.__wrapped__ || a, b.__wrapped__ || b, callback, isWhere, stackA, stackB);
+        var aWrapped = hasOwnProperty.call(a, '__wrapped__'),
+            bWrapped = hasOwnProperty.call(b, '__wrapped__');
+
+        if (aWrapped || bWrapped) {
+          return baseIsEqual(aWrapped ? a.__wrapped__ : a, bWrapped ? b.__wrapped__ : b, callback, isWhere, stackA, stackB);
         }
         // exit for functions and DOM nodes
         if (className != objectClass || (!support.nodeClass && (isNode(a) || isNode(b)))) {
@@ -2040,7 +2043,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
     if (!support.argsClass) {
       isArguments = function(value) {
         return value && typeof value == 'object' && typeof value.length == 'number' &&
-          hasOwnProperty.call(value, 'callee') && propertyIsEnumerable.call(value, 'callee') || false;
+          hasOwnProperty.call(value, 'callee') && !propertyIsEnumerable.call(value, 'callee') || false;
       };
     }
 
@@ -6452,7 +6455,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * debugging. See http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/#toc-sourceurl
      *
      * For more information on precompiling templates see:
-     * http://lodash.com/#custom-builds
+     * http://lodash.com/custom-builds
      *
      * For more information on Chrome extension sandboxes see:
      * http://developer.chrome.com/stable/extensions/sandboxingEval.html
@@ -8299,7 +8302,6 @@ exports.unbind = function(el, type, fn, capture){
 
 });
 require.register("component-query/index.js", function(exports, require, module){
-
 function one(selector, el) {
   return el.querySelector(selector);
 }
@@ -8319,6 +8321,7 @@ exports.engine = function(obj){
   if (!obj.all) throw new Error('.all callback required');
   one = obj.one;
   exports.all = obj.all;
+  return exports;
 };
 
 });
@@ -8542,7 +8545,6 @@ exports.once = function(el, event, selector, fn, capture){
 
 });
 require.register("component-raf/index.js", function(exports, require, module){
-
 /**
  * Expose `requestAnimationFrame()`.
  */
@@ -8562,8 +8564,9 @@ var prev = new Date().getTime();
 function fallback(fn) {
   var curr = new Date().getTime();
   var ms = Math.max(0, 16 - (curr - prev));
-  setTimeout(fn, ms);
+  var req = setTimeout(fn, ms);
   prev = curr;
+  return req;
 }
 
 /**
@@ -8574,7 +8577,8 @@ var cancel = window.cancelAnimationFrame
   || window.webkitCancelAnimationFrame
   || window.mozCancelAnimationFrame
   || window.oCancelAnimationFrame
-  || window.msCancelAnimationFrame;
+  || window.msCancelAnimationFrame
+  || window.clearTimeout;
 
 exports.cancel = function(id){
   cancel.call(window, id);
@@ -8998,6 +9002,8 @@ var ClickHandler = require('./lib/click_handler');
 var IndicatorView = require('./lib/indicator_view');
 var IndicatorHandler = require('./lib/indicator_handler');
 
+var CHANNEL_NAMESPACE = 'goinstant-widgets-click-indicator-';
+
 /**
  * A list of supported options
  * @const
@@ -9006,7 +9012,8 @@ var SUPPORTED_OPTIONS = [
   'room',
   'namePlates',
   'element',
-  'displayTimer'
+  'displayTimer',
+  'namespace'
 ];
 
 /**
@@ -9016,7 +9023,8 @@ var SUPPORTED_OPTIONS = [
 var DEFAULT_OPTIONS = {
   namePlates: true,
   element: document.documentElement,
-  displayTimer: 500
+  displayTimer: 500,
+  namespace: ''
 };
 
 /**
@@ -9034,6 +9042,8 @@ var SUPPORTED_EVENTS = [
  */
 function ClickIndicator(opts) {
   this._options = this._validateOptions(opts);
+
+  this._options.namespace = CHANNEL_NAMESPACE + this._options.namespace;
 
   this._emitter = new Emitter();
 
@@ -9154,6 +9164,10 @@ ClickIndicator.prototype._validateOptions = function(opts) {
     throw new Error('Invalid displayTimer option.');
   }
 
+  if(!_.isString(opts.namespace)) {
+    throw new Error('Invalid namespace option.');
+  }
+
   return opts;
 };
 
@@ -9175,8 +9189,6 @@ var _ = require('lodash');
 var selectors = require('./selectors');
 var scrollPosition = require('./scroll_position');
 
-var CHANNEL_NAMESPACE = '/goinstant/widgets/click-indicator/';
-
 
 /**
  * @constructor
@@ -9184,6 +9196,7 @@ var CHANNEL_NAMESPACE = '/goinstant/widgets/click-indicator/';
 function IndicatorHandler(component) {
   this._room = component._options.room;
   this._namePlates = component._options.namePlates;
+  this._namespace = component._options.namespace;
 
   this._emitter = component._emitter;
 
@@ -9202,7 +9215,7 @@ function IndicatorHandler(component) {
  * @param {function} cb A callback function.
  */
 IndicatorHandler.prototype.initialize = function(cb) {
-  this._channel = this._room.channel(CHANNEL_NAMESPACE);
+  this._channel = this._room.channel(this._namespace);
 
   this._clickHandler.on('click', this._eventHandler);
 
@@ -9542,7 +9555,8 @@ function ClickHandler(el) {
             '_touchStartHandler',
             '_touchEndHandler',
             '_touchFinishedHandler',
-            '_mouseStartHandler',
+            '_mousedownHandler',
+            '_mouseupHandler',
             '_validatedClick');
 
   this._startPosition = null;
@@ -9619,13 +9633,23 @@ ClickHandler.prototype._touchFinishedHandler = function(event) {
 };
 
 /**
- * Sets the start position for a mouse event so we know if a click is from the
+ * Sets the down position for a mouse event so we know if a click is from the
  * mouse or keyboard.
  * @private
  * @param {object} event The triggered event.
  */
-ClickHandler.prototype._mouseStartHandler = function(event) {
+ClickHandler.prototype._mousedownHandler = function(event) {
   this._startPosition = this._getPosition(event);
+};
+
+/**
+ * Sets the up position for a mouse event so we can animate the click at the
+ * end, rather than the beginning.
+ * @private
+ * @param {object} event The triggered event.
+ */
+ClickHandler.prototype._mouseupHandler = function(event) {
+  this._endPosition = this._getPosition(event);
 };
 
 /**
@@ -9635,6 +9659,7 @@ ClickHandler.prototype._mouseStartHandler = function(event) {
  */
 ClickHandler.prototype._validatedClick = function(event) {
   var element = event.target || event.srcElement;
+
   var location = {};
 
   // If the start position was never set we know this was a click event using
@@ -9645,7 +9670,6 @@ ClickHandler.prototype._validatedClick = function(event) {
 
   // Touch/Mouse events
   } else {
-    var endPos = this._endPosition || this._startPosition;
     var box = element.getBoundingClientRect();
     var scrollPos = scrollPosition.get();
 
@@ -9653,6 +9677,8 @@ ClickHandler.prototype._validatedClick = function(event) {
       top: box.top + scrollPos.top,
       left: box.left + scrollPos.left
     };
+
+    var endPos = this._endPosition || this._startPosition;
 
     // Calculate the offsetX/Y inside the element
     location.x = (endPos.x - pos.left) / element.offsetWidth;
@@ -9754,7 +9780,8 @@ ClickHandler.prototype.on = function(event, listener) {
 
     // Mouse devices
   if (!this._touchEnabled) {
-    binder.on(this._element, 'mousedown', this._mouseStartHandler);
+    binder.on(this._element, 'mousedown', this._mousedownHandler);
+    binder.on(this._element, 'mouseup', this._mouseupHandler);
     binder.on(this._element, 'click', this._validatedClick);
 
   // Touch devices
@@ -9782,7 +9809,8 @@ ClickHandler.prototype.off = function(event, listener) {
 
   // Mouse devices
   if (!this._touchEnabled) {
-    binder.off(this._element, 'mousedown', this._mouseStartHandler);
+    binder.off(this._element, 'mousedown', this._mousedownHandler);
+    binder.off(this._element, 'mouseup', this._mouseupHandler);
     binder.off(this._element, 'click', this._validatedClick);
 
   // Touch devices
