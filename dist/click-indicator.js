@@ -202,7 +202,7 @@ module.exports = require('./dist/lodash.compat.js');
 require.register("lodash-lodash/dist/lodash.compat.js", function(exports, require, module){
 /**
  * @license
- * Lo-Dash 2.2.1 (Custom Build) <http://lodash.com/>
+ * Lo-Dash 2.3.0 (Custom Build) <http://lodash.com/>
  * Build: `lodash -o ./dist/lodash.compat.js`
  * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
@@ -252,7 +252,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
 
   /**
    * Used to match ES6 template delimiters
-   * http://people.mozilla.org/~jorendorff/es6-draft.html#sec-7.8.6
+   * http://people.mozilla.org/~jorendorff/es6-draft.html#sec-literals-string-literals
    */
   var reEsTemplate = /\$\{([^\\}]*(?:\\.[^\\}]*)*)\}/g;
 
@@ -260,7 +260,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
   var reFlags = /\w*$/;
 
   /** Used to detected named functions */
-  var reFuncName = /^function[ \n\r\t]+\w/;
+  var reFuncName = /^\s*function[ \n\r\t]+\w/;
 
   /** Used to match "interpolate" template delimiters */
   var reInterpolate = /<%=([\s\S]+?)%>/g;
@@ -768,10 +768,10 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
     (function() {
       var length = shadowedProps.length;
       while (length--) {
-        var prop = shadowedProps[length];
+        var key = shadowedProps[length];
         for (var className in nonEnumProps) {
-          if (hasOwnProperty.call(nonEnumProps, className) && !hasOwnProperty.call(nonEnumProps[className], prop)) {
-            nonEnumProps[className][prop] = false;
+          if (hasOwnProperty.call(nonEnumProps, className) && !hasOwnProperty.call(nonEnumProps[className], key)) {
+            nonEnumProps[className][key] = false;
           }
         }
       }
@@ -881,8 +881,8 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
           props = [];
 
       ctor.prototype = { 'valueOf': 1, 'y': 1 };
-      for (var prop in new ctor) { props.push(prop); }
-      for (prop in arguments) { }
+      for (var key in new ctor) { props.push(key); }
+      for (key in arguments) { }
 
       /**
        * Detect if an `arguments` object's [[Class]] is resolvable (all but Firefox < 4, IE < 9).
@@ -946,7 +946,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
        * @memberOf _.support
        * @type boolean
        */
-      support.nonEnumArgs = prop != 0;
+      support.nonEnumArgs = key != 0;
 
       /**
        * Detect if properties shadowing those on `Object.prototype` are non-enumerable.
@@ -1210,13 +1210,13 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      *
      * @private
      * @param {*} value The value to clone.
-     * @param {boolean} [deep=false] Specify a deep clone.
+     * @param {boolean} [isDeep=false] Specify a deep clone.
      * @param {Function} [callback] The function to customize cloning values.
      * @param {Array} [stackA=[]] Tracks traversed source objects.
      * @param {Array} [stackB=[]] Associates clones with source counterparts.
      * @returns {*} Returns the cloned value.
      */
-    function baseClone(value, deep, callback, stackA, stackB) {
+    function baseClone(value, isDeep, callback, stackA, stackB) {
       if (callback) {
         var result = callback(value);
         if (typeof result != 'undefined') {
@@ -1249,7 +1249,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
         return value;
       }
       var isArr = isArray(value);
-      if (deep) {
+      if (isDeep) {
         // check for circular references and return corresponding clone
         var initedStack = !stackA;
         stackA || (stackA = getArray());
@@ -1276,7 +1276,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
         }
       }
       // exit for shallow clone
-      if (!deep) {
+      if (!isDeep) {
         return result;
       }
       // add the source value to the stack of traversed objects
@@ -1286,7 +1286,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
 
       // recursively populate clone (susceptible to call stack limits)
       (isArr ? baseEach : forOwn)(value, function(objValue, key) {
-        result[key] = baseClone(objValue, deep, callback, stackA, stackB);
+        result[key] = baseClone(objValue, isDeep, callback, stackA, stackB);
       });
 
       if (initedStack) {
@@ -1403,20 +1403,18 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
 
       function bound() {
         var thisBinding = isBind ? thisArg : this;
-        if (isCurry || partialArgs || partialRightArgs) {
-          if (partialArgs) {
-            var args = partialArgs.slice();
-            push.apply(args, arguments);
+        if (partialArgs) {
+          var args = partialArgs.slice();
+          push.apply(args, arguments);
+        }
+        if (partialRightArgs || isCurry) {
+          args || (args = slice(arguments));
+          if (partialRightArgs) {
+            push.apply(args, partialRightArgs);
           }
-          if (partialRightArgs || isCurry) {
-            args || (args = slice(arguments));
-            if (partialRightArgs) {
-              push.apply(args, partialRightArgs);
-            }
-            if (isCurry && args.length < arity) {
-              bitmask |= 16 & ~32;
-              return baseCreateWrapper([func, (isCurryBound ? bitmask : bitmask & ~3), args, null, thisArg, arity]);
-            }
+          if (isCurry && args.length < arity) {
+            bitmask |= 16 & ~32;
+            return baseCreateWrapper([func, (isCurryBound ? bitmask : bitmask & ~3), args, null, thisArg, arity]);
           }
         }
         args || (args = arguments);
@@ -1435,17 +1433,54 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
     }
 
     /**
+     * The base implementation of `_.difference` that accepts a single array
+     * of values to exclude.
+     *
+     * @private
+     * @param {Array} array The array to process.
+     * @param {Array} [values] The array of values to exclude.
+     * @returns {Array} Returns a new array of filtered values.
+     */
+    function baseDifference(array, values) {
+      var index = -1,
+          indexOf = getIndexOf(),
+          length = array ? array.length : 0,
+          isLarge = length >= largeArraySize && indexOf === baseIndexOf,
+          result = [];
+
+      if (isLarge) {
+        var cache = createCache(values);
+        if (cache) {
+          indexOf = cacheIndexOf;
+          values = cache;
+        } else {
+          isLarge = false;
+        }
+      }
+      while (++index < length) {
+        var value = array[index];
+        if (indexOf(values, value) < 0) {
+          result.push(value);
+        }
+      }
+      if (isLarge) {
+        releaseObject(values);
+      }
+      return result;
+    }
+
+    /**
      * The base implementation of `_.flatten` without support for callback
      * shorthands or `thisArg` binding.
      *
      * @private
      * @param {Array} array The array to flatten.
      * @param {boolean} [isShallow=false] A flag to restrict flattening to a single level.
-     * @param {boolean} [isArgArrays=false] A flag to restrict flattening to arrays and `arguments` objects.
+     * @param {boolean} [isStrict=false] A flag to restrict flattening to arrays and `arguments` objects.
      * @param {number} [fromIndex=0] The index to start from.
      * @returns {Array} Returns a new flattened array.
      */
-    function baseFlatten(array, isShallow, isArgArrays, fromIndex) {
+    function baseFlatten(array, isShallow, isStrict, fromIndex) {
       var index = (fromIndex || 0) - 1,
           length = array ? array.length : 0,
           result = [];
@@ -1457,7 +1492,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
             && (isArray(value) || isArguments(value))) {
           // recursively flatten arrays (susceptible to call stack limits)
           if (!isShallow) {
-            value = baseFlatten(value, isShallow, isArgArrays);
+            value = baseFlatten(value, isShallow, isStrict);
           }
           var valIndex = -1,
               valLength = value.length,
@@ -1467,7 +1502,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
           while (++valIndex < valLength) {
             result[resIndex++] = value[valIndex];
           }
-        } else if (!isArgArrays) {
+        } else if (!isStrict) {
           result.push(value);
         }
       }
@@ -2224,7 +2259,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
     });
 
     /**
-     * Creates a clone of `value`. If `deep` is `true` nested objects will also
+     * Creates a clone of `value`. If `isDeep` is `true` nested objects will also
      * be cloned, otherwise they will be assigned by reference. If a callback
      * is provided it will be executed to produce the cloned values. If the
      * callback returns `undefined` cloning will be handled by the method instead.
@@ -2234,7 +2269,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * @memberOf _
      * @category Objects
      * @param {*} value The value to clone.
-     * @param {boolean} [deep=false] Specify a deep clone.
+     * @param {boolean} [isDeep=false] Specify a deep clone.
      * @param {Function} [callback] The function to customize cloning values.
      * @param {*} [thisArg] The `this` binding of `callback`.
      * @returns {*} Returns the cloned value.
@@ -2263,15 +2298,15 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * clone.childNodes.length;
      * // => 0
      */
-    function clone(value, deep, callback, thisArg) {
+    function clone(value, isDeep, callback, thisArg) {
       // allows working with "Collections" methods without using their `index`
-      // and `collection` arguments for `deep` and `callback`
-      if (typeof deep != 'boolean' && deep != null) {
+      // and `collection` arguments for `isDeep` and `callback`
+      if (typeof isDeep != 'boolean' && isDeep != null) {
         thisArg = callback;
-        callback = deep;
-        deep = false;
+        callback = isDeep;
+        isDeep = false;
       }
-      return baseClone(value, deep, typeof callback == 'function' && baseCreateCallback(callback, thisArg, 1));
+      return baseClone(value, isDeep, typeof callback == 'function' && baseCreateCallback(callback, thisArg, 1));
     }
 
     /**
@@ -2672,7 +2707,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * @returns {Object} Returns the created inverted object.
      * @example
      *
-     *  _.invert({ 'first': 'fred', 'second': 'barney' });
+     * _.invert({ 'first': 'fred', 'second': 'barney' });
      * // => { 'fred': 'first', 'barney': 'second' }
      */
     function invert(object) {
@@ -3173,23 +3208,29 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * // => { 'name': 'fred' }
      */
     function omit(object, callback, thisArg) {
-      var indexOf = getIndexOf(),
-          isFunc = typeof callback == 'function',
-          result = {};
+      var result = {};
+      if (typeof callback != 'function') {
+        var props = [];
+        forIn(object, function(value, key) {
+          props.push(key);
+        });
+        props = baseDifference(props, baseFlatten(arguments, true, false, 1));
 
-      if (isFunc) {
-        callback = lodash.createCallback(callback, thisArg, 3);
-      } else {
-        var props = baseFlatten(arguments, true, false, 1);
-      }
-      forIn(object, function(value, key, object) {
-        if (isFunc
-              ? !callback(value, key, object)
-              : indexOf(props, key) < 0
-            ) {
-          result[key] = value;
+        var index = -1,
+            length = props.length;
+
+        while (++index < length) {
+          var key = props[index];
+          result[key] = object[key];
         }
-      });
+      } else {
+        callback = lodash.createCallback(callback, thisArg, 3);
+        forIn(object, function(value, key, object) {
+          if (!callback(value, key, object)) {
+            result[key] = value;
+          }
+        });
+      }
       return result;
     }
 
@@ -3315,7 +3356,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
         }
       }
       if (callback) {
-        callback = baseCreateCallback(callback, thisArg, 4);
+        callback = lodash.createCallback(callback, thisArg, 4);
         (isArr ? baseEach : forOwn)(object, function(value, index, object) {
           return callback(accumulator, value, index, object);
         });
@@ -3411,7 +3452,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * _.contains({ 'name': 'fred', 'age': 40 }, 'fred');
      * // => true
      *
-     * _.contains('pebbles', 'ur');
+     * _.contains('pebbles', 'eb');
      * // => true
      */
     function contains(collection, target, fromIndex) {
@@ -4162,7 +4203,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      */
     function reduce(collection, callback, accumulator, thisArg) {
       var noaccum = arguments.length < 3;
-      callback = baseCreateCallback(callback, thisArg, 4);
+      callback = lodash.createCallback(callback, thisArg, 4);
 
       if (isArray(collection)) {
         var index = -1,
@@ -4205,7 +4246,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      */
     function reduceRight(collection, callback, accumulator, thisArg) {
       var noaccum = arguments.length < 3;
-      callback = baseCreateCallback(callback, thisArg, 4);
+      callback = lodash.createCallback(callback, thisArg, 4);
       forEachRight(collection, function(value, index, collection) {
         accumulator = noaccum
           ? (noaccum = false, value)
@@ -4337,7 +4378,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * // => 3
      *
      * _.size('pebbles');
-     * // => 5
+     * // => 7
      */
     function size(collection) {
       var length = collection ? collection.length : 0;
@@ -4552,7 +4593,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * @memberOf _
      * @category Arrays
      * @param {Array} array The array to process.
-     * @param {...Array} [array] The arrays of values to exclude.
+     * @param {...Array} [values] The arrays of values to exclude.
      * @returns {Array} Returns a new array of filtered values.
      * @example
      *
@@ -4560,33 +4601,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * // => [1, 3, 4]
      */
     function difference(array) {
-      var index = -1,
-          indexOf = getIndexOf(),
-          length = array ? array.length : 0,
-          seen = baseFlatten(arguments, true, true, 1),
-          result = [];
-
-      var isLarge = length >= largeArraySize && indexOf === baseIndexOf;
-
-      if (isLarge) {
-        var cache = createCache(seen);
-        if (cache) {
-          indexOf = cacheIndexOf;
-          seen = cache;
-        } else {
-          isLarge = false;
-        }
-      }
-      while (++index < length) {
-        var value = array[index];
-        if (indexOf(seen, value) < 0) {
-          result.push(value);
-        }
-      }
-      if (isLarge) {
-        releaseObject(seen);
-      }
-      return result;
+      return baseDifference(array, baseFlatten(arguments, true, true, 1));
     }
 
     /**
@@ -5450,7 +5465,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * // => [2, 3, 4]
      */
     function without(array) {
-      return difference(array, slice(arguments, 1));
+      return baseDifference(array, slice(arguments, 1));
     }
 
     /**
@@ -5596,8 +5611,8 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * @example
      *
      * var view = {
-     *  'label': 'docs',
-     *  'onClick': function() { console.log('clicked ' + this.label); }
+     *   'label': 'docs',
+     *   'onClick': function() { console.log('clicked ' + this.label); }
      * };
      *
      * _.bindAll(view);
@@ -5881,6 +5896,9 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
           if (isCalled) {
             lastCalled = now();
             result = func.apply(thisArg, args);
+            if (!timeoutId && !maxTimeoutId) {
+              args = thisArg = null;
+            }
           }
         } else {
           timeoutId = setTimeout(delayed, remaining);
@@ -5895,6 +5913,9 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
         if (trailing || (maxWait !== wait)) {
           lastCalled = now();
           result = func.apply(thisArg, args);
+          if (!timeoutId && !maxTimeoutId) {
+            args = thisArg = null;
+          }
         }
       };
 
@@ -5910,8 +5931,10 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
           if (!maxTimeoutId && !leading) {
             lastCalled = stamp;
           }
-          var remaining = maxWait - (stamp - lastCalled);
-          if (remaining <= 0) {
+          var remaining = maxWait - (stamp - lastCalled),
+              isCalled = remaining <= 0;
+
+          if (isCalled) {
             if (maxTimeoutId) {
               maxTimeoutId = clearTimeout(maxTimeoutId);
             }
@@ -5922,11 +5945,18 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
             maxTimeoutId = setTimeout(maxDelayed, remaining);
           }
         }
-        if (!timeoutId && wait !== maxWait) {
+        if (isCalled && timeoutId) {
+          timeoutId = clearTimeout(timeoutId);
+        }
+        else if (!timeoutId && wait !== maxWait) {
           timeoutId = setTimeout(delayed, wait);
         }
         if (leadingCall) {
+          isCalled = true;
           result = func.apply(thisArg, args);
+        }
+        if (isCalled && !timeoutId && !maxTimeoutId) {
+          args = thisArg = null;
         }
         return result;
       };
@@ -6507,8 +6537,8 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * // => 'hello mustache!'
      *
      * // using the `imports` option to import jQuery
-     * var list = '<% $.each(people, function(name) { %><li><%- name %></li><% }); %>';
-     * _.template(list, { 'people': ['fred', 'barney'] }, { 'imports': { '$': jQuery } });
+     * var list = '<% jq.each(people, function(name) { %><li><%- name %></li><% }); %>';
+     * _.template(list, { 'people': ['fred', 'barney'] }, { 'imports': { 'jq': jQuery } });
      * // => '<li>fred</li><li>barney</li>'
      *
      * // using the `sourceURL` option to specify a custom sourceURL for the template
@@ -7024,7 +7054,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * @memberOf _
      * @type string
      */
-    lodash.VERSION = '2.2.1';
+    lodash.VERSION = '2.3.0';
 
     // add "Chaining" functions to the wrapper
     lodash.prototype.chain = wrapperChain;
@@ -7094,12 +7124,6 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
 
   // some AMD build optimizers like r.js check for condition patterns like the following:
   if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
-    // Expose Lo-Dash to the global object even when an AMD loader is present in
-    // case Lo-Dash was injected by a third-party script and not intended to be
-    // loaded as a module. The global assignment can be reverted in the Lo-Dash
-    // module by its `noConflict()` method.
-    root._ = _;
-
     // define as an anonymous module so, through path mapping, it can be
     // referenced as the "underscore" module
     define(function() {
@@ -8259,6 +8283,9 @@ require.register("caolan-async/lib/async.js", function(exports, require, module)
 
 });
 require.register("component-event/index.js", function(exports, require, module){
+var bind = (window.addEventListener !== undefined) ? 'addEventListener' : 'attachEvent',
+    unbind = (window.removeEventListener !== undefined) ? 'removeEventListener' : 'detachEvent',
+    prefix = (bind !== 'addEventListener') ? 'on' : '';
 
 /**
  * Bind `el` event `type` to `fn`.
@@ -8272,11 +8299,8 @@ require.register("component-event/index.js", function(exports, require, module){
  */
 
 exports.bind = function(el, type, fn, capture){
-  if (el.addEventListener) {
-    el.addEventListener(type, fn, capture || false);
-  } else {
-    el.attachEvent('on' + type, fn);
-  }
+  el[bind](prefix + type, fn, capture || false);
+
   return fn;
 };
 
@@ -8292,14 +8316,10 @@ exports.bind = function(el, type, fn, capture){
  */
 
 exports.unbind = function(el, type, fn, capture){
-  if (el.removeEventListener) {
-    el.removeEventListener(type, fn, capture || false);
-  } else {
-    el.detachEvent('on' + type, fn);
-  }
+  el[unbind](prefix + type, fn, capture || false);
+
   return fn;
 };
-
 });
 require.register("component-query/index.js", function(exports, require, module){
 function one(selector, el) {
@@ -8701,7 +8721,7 @@ var _ = require('lodash');
 var async = require('async');
 var Emitter = require('emitter');
 
-var VALID_EVENTS = ["join", "leave", "change"];
+var VALID_EVENTS = ['join', 'leave', 'change'];
 
 /**
  * Instantiates the UserCache instance.
@@ -8966,6 +8986,8 @@ UserCache.prototype._updateUser = function(value, context) {
  */
 UserCache.prototype._handleJoinEvent = function(user) {
   this._users[user.id] = user;
+  this._usersKeys[user.id] = this._room.key('/.users/' + user.id);
+
   this._emitter.emit('join', user);
 };
 
@@ -8976,6 +8998,8 @@ UserCache.prototype._handleJoinEvent = function(user) {
  */
 UserCache.prototype._handleLeaveEvent = function(user) {
   delete this._users[user.id];
+  delete this._usersKeys[user.id];
+
   this._emitter.emit('leave', user);
 };
 
@@ -9120,10 +9144,11 @@ ClickIndicator.prototype.destroy = function(cb) {
 
   this._emitter.off();
 
+  self._view.destroy();
+
   var tasks = [
     _.bind(self._indicatorHandler.destroy, self._indicatorHandler),
-    _.bind(self._userCache.destroy, self._userCache),
-    _.bind(self._view.destroy, self._view)
+    _.bind(self._userCache.destroy, self._userCache)
   ];
 
   async.series(tasks, cb);
