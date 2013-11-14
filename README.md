@@ -94,6 +94,41 @@ default browser:
 open test/index.html
 ```
 
+### Running Examples
+
+This will open up an example of Click Indicator at work, using your local
+build.
+
+You should have run `grunt build` already.
+
+#### 1. Copy the example config.
+
+```
+cp config/config.example.js config/config.js
+```
+
+#### 2. Replace the connectUrl with your GoInstant application's connectUrl.
+
+If you haven't signed up for GoInstant yet, you can [sign up and create an
+application here](https://goinstant.com/signup).
+
+After you have an application's `connectUrl` set inside of config.js:
+
+##### config.js
+
+```js
+window.config = {
+  connectUrl: 'https://goinstant.net/YOUR_ACCOUNT/YOUR_APP',
+  room: 'goinstant-widget-examples'
+};
+```
+
+#### 3. Open the example index and click an example.
+
+```
+open examples/index.html
+```
+
 ## Widgets are built on top of GoInstant
 
 [GoInstant](https://goinstant.com) is an API for integrating realtime,
