@@ -135,10 +135,11 @@ ClickIndicator.prototype.destroy = function(cb) {
 
   this._emitter.off();
 
+  self._view.destroy();
+
   var tasks = [
     _.bind(self._indicatorHandler.destroy, self._indicatorHandler),
-    _.bind(self._userCache.destroy, self._userCache),
-    _.bind(self._view.destroy, self._view)
+    _.bind(self._userCache.destroy, self._userCache)
   ];
 
   async.series(tasks, cb);
