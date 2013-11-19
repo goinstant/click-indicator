@@ -8,7 +8,6 @@
  */
 
 var Emitter = require('emitter');
-var async = require('async');
 var _ = require('lodash');
 
 var UserCache = require('usercache');
@@ -78,12 +77,8 @@ function ClickIndicator(opts) {
  *                      initialization is complete.
  */
 ClickIndicator.prototype.initialize = function(cb) {
-  var tasks = [
-    _.bind(this._userCache.initialize, this._userCache),
-    _.bind(this._indicatorHandler.initialize, this._indicatorHandler)
-  ];
-
-  async.series(tasks, cb);
+  this._indicatorHandler.initialize();
+  this._userCache.initialize(cb);
 };
 
 /**
@@ -137,12 +132,9 @@ ClickIndicator.prototype.destroy = function(cb) {
 
   self._view.destroy();
 
-  var tasks = [
-    _.bind(self._indicatorHandler.destroy, self._indicatorHandler),
-    _.bind(self._userCache.destroy, self._userCache)
-  ];
+  this._indicatorHandler.destroy();
 
-  async.series(tasks, cb);
+  this._userCache.destroy(cb);
 };
 
 /**
