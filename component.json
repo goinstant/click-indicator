@@ -5,12 +5,12 @@
   "version": "v1.1.1",
   "keywords": [],
   "dependencies": {
-    "lodash/lodash": "*",
-    "component/emitter": "*",
-    "caolan/async": "*",
-    "stagas/binder": "*",
-    "component/raf": "*",
-    "goinstant/colors-common": "*",
+    "lodash/lodash": "2.3.0",
+    "component/emitter": "1.1.0",
+    "caolan/async": "f01b3992fbe7aa2f4881152143608ad666aea1cc",
+    "stagas/binder": "0.0.1",
+    "component/raf": "1.1.2",
+    "goinstant/colors-common": "v1.0.0",
     "goinstant/usercache": "*"
   },
   "development": {
