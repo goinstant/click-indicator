@@ -11,7 +11,7 @@
     "stagas/binder": "0.0.1",
     "component/raf": "1.1.2",
     "goinstant/colors-common": "v1.0.0",
-    "goinstant/usercache": "*"
+    "goinstant/usercache": "v1.0.0"
   },
   "development": {
     "visionmedia/mocha": "*",
