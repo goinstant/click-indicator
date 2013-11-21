@@ -17,15 +17,15 @@ describe('IndicatorHandler', function() {
   var mockUser, mockChannel, mockRoom, mockView, mockUserCache, mockComponent,
       indicatorHandler;
 
-  beforeEach(function(done) {
+  beforeEach(function() {
     mockUser = {
       userId: 'fakeId'
     };
 
     mockChannel = {
       message: sinon.stub(),
-      on: sinon.stub().callsArg(2),
-      off: sinon.stub().callsArg(2)
+      on: sinon.stub(),
+      off: sinon.stub()
     };
 
     mockRoom = {
@@ -58,7 +58,7 @@ describe('IndicatorHandler', function() {
     };
 
     indicatorHandler = new IndicatorHandler(mockComponent);
-    indicatorHandler.initialize(done);
+    indicatorHandler.initialize();
   });
 
   it ('Channel message is sent when click is emitted.', function() {
@@ -93,17 +93,11 @@ describe('IndicatorHandler', function() {
     sinon.assert.notCalled(mockView.addIndicator);
   });
 
-  it('destroy removes listeners', function(done) {
-    indicatorHandler.destroy(function(err) {
-      if (err) {
-        throw err;
-      }
+  it('destroy removes listeners', function() {
+    indicatorHandler.destroy();
 
-      sinon.assert.calledOnce(mockComponent._clickHandler.off);
-      sinon.assert.calledOnce(mockChannel.off);
-      return done();
-    });
-
+    sinon.assert.calledOnce(mockComponent._clickHandler.off);
+    sinon.assert.calledOnce(mockChannel.off);
   });
 
 });
