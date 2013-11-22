@@ -15,6 +15,7 @@
   height: 100%;
   top: 0;
   left: 0;
+  line-height: 1.2;
   overflow: hidden;
   z-index: 1000;
   pointer-events: none;
