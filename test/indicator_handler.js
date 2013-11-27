@@ -91,8 +91,8 @@ describe('IndicatorHandler', function() {
     var errMsg =
       'ClickIndicator: Element not found. A remote user clicked on an ' +
       'element that could not be found locally. See ' +
-      'https://developers.goinstant.com/v1/widgets/click_indicator.html for ' +
-      'more details.';
+      'https://developers.goinstant.com/v1/widgets/click_indicator.html#' +
+      'element-matching for more details.';
 
     assert.exception(function() {
       indicatorHandler._messageHandler(data, mockUser);
