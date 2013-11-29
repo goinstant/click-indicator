@@ -34,6 +34,7 @@
   ],
   "images": [
     "images/cursor.png",
-    "images/animation.png"
+    "images/animation.png",
+    "images/blank.png"
   ]
 }
