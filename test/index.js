@@ -105,6 +105,114 @@ describe('Click Indicator', function() {
     });
   });
 
+  describe('data-goinstant-id', function() {
+    var mockChannel;
+    var mockUser;
+    var mockView;
+    var mockUserCache;
+    var destroyed;
+
+    var DATA_GOINSTANT_ID = 'data-goinstant-id';
+    var DATA_GOINSTANT_VALUE = 'gi-click';
+
+    beforeEach(function() {
+
+      mockUser = {
+        userId: 'fakeId'
+      };
+
+      mockChannel = {
+        message: sinon.stub(),
+        on: sinon.stub(),
+        off: sinon.stub()
+      };
+
+      mockView = {
+        addIndicator: sinon.stub()
+      };
+
+      mockUserCache = {
+        initialize: sinon.stub().yields(),
+        destroy: sinon.stub().yields(),
+        getUser: sinon.stub().returns({ id: 'remoteUser' }),
+        getLocalUser: sinon.stub().returns(mockUser)
+      };
+
+      mockRoom.user = sinon.stub().yields(null, mockUser);
+      mockRoom.channel = sinon.stub().returns(mockChannel);
+
+      destroyed = false;
+    });
+
+    afterEach(function(done) {
+      if (destroyed) {
+        return done();
+      }
+
+      clickIndicator.destroy(done);
+    });
+
+    it('adds a data-goinstant-id to the default binding element', function(done) {
+      clickIndicator = new ClickIndicator({ room: mockRoom });
+      clickIndicator._userCache = mockUserCache;
+      clickIndicator.initialize(function(err) {
+        if (err) {
+          return done(err);
+        }
+
+        var el = clickIndicator._element;
+        var val = el.getAttribute(DATA_GOINSTANT_ID);
+
+        assert.equal(el, document.documentElement);
+        assert.equal(val, DATA_GOINSTANT_VALUE);
+        done();
+      });
+    });
+
+    it('adds a data-goinstant-id to the custom binding element', function(done) {
+      var div = document.createElement('div');
+
+      clickIndicator = new ClickIndicator({ room: mockRoom, element: div });
+      clickIndicator._userCache = mockUserCache;
+      clickIndicator.initialize(function(err) {
+        if (err) {
+          return done(err);
+        }
+
+        var el = clickIndicator._element;
+        var val = el.getAttribute(DATA_GOINSTANT_ID);
+
+        assert.equal(div, el);
+        assert.equal(val, DATA_GOINSTANT_VALUE);
+        done();
+      });
+    });
+
+    it('removes the data-goinstant-id when destroyed', function(done) {
+      clickIndicator = new ClickIndicator({ room: mockRoom });
+      clickIndicator._userCache = mockUserCache;
+      clickIndicator.initialize(function(err) {
+        if (err) {
+          return done(err);
+        }
+
+        var el = clickIndicator._element;
+
+        clickIndicator.destroy(function(err) {
+          if (err) {
+            return done(err);
+          }
+
+          var val = el.getAttribute(DATA_GOINSTANT_ID);
+
+          assert.isNull(val);
+          destroyed = true;
+          done();
+        });
+      });
+    });
+  });
+
   describe('Register Listeners', function() {
 
     var mockChannel;
