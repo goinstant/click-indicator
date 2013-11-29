@@ -17,18 +17,13 @@
   left: 0;
   line-height: 1.2;
   overflow: hidden;
-  z-index: 1000;
-  pointer-events: none;
   font-family: sans-serif;
   font-size: 12px;
-
-  /* IE8 click through */
-  filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src='images/blank.png', sizingMethod='scale');
-  background: none !important;
 }
 
 .gi-click {
   position: absolute;
+  z-index: 1000;
 }
 
   .gi-click .gi-cursor {
