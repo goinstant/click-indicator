@@ -17,14 +17,13 @@
   left: 0;
   line-height: 1.2;
   overflow: hidden;
-  z-index: 1000;
-  pointer-events: none;
   font-family: sans-serif;
   font-size: 12px;
 }
 
 .gi-click {
   position: absolute;
+  z-index: 1000;
 }
 
   .gi-click .gi-cursor {
