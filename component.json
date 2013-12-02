@@ -2,7 +2,7 @@
   "name": "click-indicator",
   "repo": "goinstant/components",
   "description": "GoInstant component for animated click indicators",
-  "version": "v1.1.1",
+  "version": "v1.2.0",
   "keywords": [],
   "dependencies": {
     "lodash/lodash": "2.3.0",

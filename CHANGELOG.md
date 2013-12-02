@@ -1,5 +1,10 @@
 # Click Indicator Changelog
 
+### v1.2.0
+
+- Improved styling
+- Improved error message for mismatched DOMs
+
 ### v1.1.1
 
 - Fixed destroy callback bug.
