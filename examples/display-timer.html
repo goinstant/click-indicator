@@ -69,14 +69,8 @@
         var clickIndicator = new ClickIndicator(options);
 
         clickIndicator.initialize(function(err) {
-            if (err) throw err;
-
-            // Set the container to the dynamic body size
-            $('.gi-override.gi-click-container').css({
-              "width": $(document).width(),
-              "height": $(document).height()
-            });
-          });
+          if (err) throw err;
+        });
 
         var colors = require('colors-common').DEFAULTS.slice(0,10);
         var canvas = $('#canvas');
