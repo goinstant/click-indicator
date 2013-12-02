@@ -252,7 +252,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
 
   /**
    * Used to match ES6 template delimiters
-   * http://people.mozilla.org/~jorendorff/es6-draft.html#sec-literals-string-literals
+   * http://people.mozilla.org/~jorendorff/es6-draft.html#sec-7.8.6
    */
   var reEsTemplate = /\$\{([^\\}]*(?:\\.[^\\}]*)*)\}/g;
 
@@ -2707,7 +2707,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * @returns {Object} Returns the created inverted object.
      * @example
      *
-     * _.invert({ 'first': 'fred', 'second': 'barney' });
+     *  _.invert({ 'first': 'fred', 'second': 'barney' });
      * // => { 'fred': 'first', 'barney': 'second' }
      */
     function invert(object) {
@@ -4378,7 +4378,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * // => 3
      *
      * _.size('pebbles');
-     * // => 7
+     * // => 5
      */
     function size(collection) {
       var length = collection ? collection.length : 0;
@@ -5611,8 +5611,8 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * @example
      *
      * var view = {
-     *   'label': 'docs',
-     *   'onClick': function() { console.log('clicked ' + this.label); }
+     *  'label': 'docs',
+     *  'onClick': function() { console.log('clicked ' + this.label); }
      * };
      *
      * _.bindAll(view);
@@ -6537,8 +6537,8 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * // => 'hello mustache!'
      *
      * // using the `imports` option to import jQuery
-     * var list = '<% jq.each(people, function(name) { %><li><%- name %></li><% }); %>';
-     * _.template(list, { 'people': ['fred', 'barney'] }, { 'imports': { 'jq': jQuery } });
+     * var list = '<% $.each(people, function(name) { %><li><%- name %></li><% }); %>';
+     * _.template(list, { 'people': ['fred', 'barney'] }, { 'imports': { '$': jQuery } });
      * // => '<li>fred</li><li>barney</li>'
      *
      * // using the `sourceURL` option to specify a custom sourceURL for the template
@@ -7124,6 +7124,12 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
 
   // some AMD build optimizers like r.js check for condition patterns like the following:
   if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
+    // Expose Lo-Dash to the global object even when an AMD loader is present in
+    // case Lo-Dash was injected by a third-party script and not intended to be
+    // loaded as a module. The global assignment can be reverted in the Lo-Dash
+    // module by its `noConflict()` method.
+    root._ = _;
+
     // define as an anonymous module so, through path mapping, it can be
     // referenced as the "underscore" module
     define(function() {
@@ -8283,9 +8289,9 @@ require.register("caolan-async/lib/async.js", function(exports, require, module)
 
 });
 require.register("component-event/index.js", function(exports, require, module){
-var bind = (window.addEventListener !== undefined) ? 'addEventListener' : 'attachEvent',
-    unbind = (window.removeEventListener !== undefined) ? 'removeEventListener' : 'detachEvent',
-    prefix = (bind !== 'addEventListener') ? 'on' : '';
+var bind = window.addEventListener ? 'addEventListener' : 'attachEvent',
+    unbind = window.removeEventListener ? 'removeEventListener' : 'detachEvent',
+    prefix = bind !== 'addEventListener' ? 'on' : '';
 
 /**
  * Bind `el` event `type` to `fn`.
@@ -8397,20 +8403,21 @@ require.register("discore-closest/index.js", function(exports, require, module){
 var matches = require('matches-selector')
 
 module.exports = function (element, selector, checkYoSelf, root) {
-  element = checkYoSelf ? element : element.parentNode
+  element = checkYoSelf ? {parentNode: element} : element
+
   root = root || document
 
-  do {
+  // Make sure `element !== document` and `element != null`
+  // otherwise we get an illegal invocation
+  while ((element = element.parentNode) && element !== document) {
     if (matches(element, selector))
       return element
     // After `matches` on the edge case that
     // the selector matches the root
     // (when the root is not the document)
     if (element === root)
-      return
-    // Make sure `element !== document`
-    // otherwise we get an illegal invocation
-  } while ((element = element.parentNode) && element !== document)
+      return  
+  }
 }
 });
 require.register("component-delegate/index.js", function(exports, require, module){
@@ -8503,7 +8510,9 @@ exports.on = function(el, event, selector, fn, capture){
 };
 
 /**
- * Unbind `event` listener `fn` for `el`.
+ * Unbind to `event` for `el` and invoke `fn(e)`.
+ * When a `selector` is given then delegated event
+ * handlers are unbound.
  *
  * @param {Element} el
  * @param {String} event
@@ -8730,6 +8739,7 @@ var VALID_EVENTS = ['join', 'leave', 'change'];
  */
 function UserCache(room) {
   this._room = room;
+
   this._users = {};
   this._usersKeys = {};
   this._localUserId = null;
@@ -8739,35 +8749,27 @@ function UserCache(room) {
   _.bindAll(this, [
     '_updateUser',
     '_handleLeaveEvent',
-    '_handleJoinEvent',
-    '_getUsers',
-    '_bindPlatformEvents',
-    '_getLocalUserId'
+    '_handleJoinEvent'
   ]);
 }
 
 /**
  * Initializes the UserCache by binding to platform events.
  * @param {function} cb A callback function.
- * @return {function} A callback function.
  */
 UserCache.prototype.initialize = function(cb) {
   if (!cb || !_.isFunction(cb)) {
     throw new Error('Callback was not found or invalid');
   }
 
-  var tasks = [
-    this._getLocalUserId,
-    this._bindPlatformEvents,
-    this._getUsers
-  ];
+  this._getLocalUserId();
+  this._bindEvents();
 
   var self = this;
 
-  async.series(tasks, function(err) {
+  this._getUsers(function(err) {
     if (err) {
-      return self.destroy(function() {
-        // Ignore destroy errors here since we're erroring anyways.
+      self.destroy(function() {
         return cb(err);
       });
     }
@@ -8778,28 +8780,25 @@ UserCache.prototype.initialize = function(cb) {
 
 /**
  * Destroys the UserCache instance.
- * @param {function} cb A callback function.
- * @return {function} A callback function.
+ * @public
  */
 UserCache.prototype.destroy = function(cb) {
-  var self = this;
+  var users = this._room.users;
 
-  if (!cb || !_.isFunction(cb)) {
-    throw new Error('Callback was not found or invalid');
-  }
+  var usersSetOptions = {
+    local: true,
+    bubble: true,
+    listener: this._updateUser
+  };
 
-  var users = self._room.key('/.users');
+  this._room.off('leave', this._handleLeaveEvent);
+  this._room.off('join', this._handleJoinEvent);
+  users.off('set', usersSetOptions);
+  users.off('remove', usersSetOptions);
 
-  var tasks = [
-    _.bind(self._room.off, self._room, 'leave', self._handleLeaveEvent),
-    _.bind(self._room.off, self._room, 'join', self._handleJoinEvent),
-    _.bind(users.off, users, 'set', self._updateUser),
-    _.bind(users.off, users, 'remove', self._updateUser)
-  ];
+  this._emitter.off();
 
-  self._emitter.off();
-
-  async.parallel(tasks, cb);
+  cb();
 };
 
 /**
@@ -8861,7 +8860,7 @@ UserCache.prototype.getAllUserKeys = function() {
  * @return {object} The local user's key.
  */
 UserCache.prototype.getLocalUserKey = function() {
-  return this.getUserKey(this._localUserId);
+  return this._room.self();
 };
 
 /**
@@ -8877,7 +8876,6 @@ UserCache.prototype.on = function(event, listener) {
   if (!_.isFunction(listener)) {
     throw new Error('Invalid argument: listener function is required');
   }
-
   this._emitter.on(event, listener);
 };
 
@@ -8897,19 +8895,12 @@ UserCache.prototype.off = function(event, listener) {
 /**
  * Gets the local user's ID
  * @private
- * @param {function} cb A callback function.
  */
-UserCache.prototype._getLocalUserId = function(cb) {
-  var self = this;
+UserCache.prototype._getLocalUserId = function() {
+  var selfKey = this._room.self();
+  var path = selfKey.name.split('/');
 
-  this._room.user(function(err, user) {
-    if (err) {
-      return cb(err);
-    }
-
-    self._localUserId = user.id;
-    cb();
-  });
+  this._localUserId = path[2];
 };
 
 /**
@@ -8918,44 +8909,43 @@ UserCache.prototype._getLocalUserId = function(cb) {
  * @param {function} cb A callback function.
  */
 UserCache.prototype._getUsers = function(cb) {
+  var usersKey = this._room.users;
+
   var self = this;
 
-  this._room.users(function(err, userMap, keyMap) {
+  usersKey.get(function(err, users) {
     if (err) {
       return cb(err);
     }
 
-    self._users = userMap;
-    self._usersKeys = keyMap;
+    self._users = users;
+
+    // Create a reference to each user's key
+    _.each(users, function(userObj, keyName) {
+      self._usersKeys[keyName] = self._room.user(keyName);
+    });
 
     cb();
   });
 };
 
 /**
- * Binds to room.join, room.leave and user key.set
+ * Binds to room.join, room.leave and user key.set/key.remove
  * @private
- * @param {function} cb A callback function.
- * @return {function} A callback function.
  */
-UserCache.prototype._bindPlatformEvents = function(cb) {
-  var self = this;
-  var users = self._room.key('/.users');
+UserCache.prototype._bindEvents = function() {
+  var users = this._room.users;
 
-  var metaOptions = {
+  var usersSetOptions = {
     local: true,
     bubble: true,
-    listener: self._updateUser
+    listener: this._updateUser
   };
 
-  var tasks = [
-    _.bind(self._room.on, self._room, 'leave', self._handleLeaveEvent),
-    _.bind(self._room.on, self._room, 'join', self._handleJoinEvent),
-    _.bind(users.on, users, 'set', metaOptions),
-    _.bind(users.on, users, 'remove', metaOptions)
-  ];
-
-  async.parallel(tasks, cb);
+  this._room.on('leave', this._handleLeaveEvent);
+  this._room.on('join', this._handleJoinEvent);
+  users.on('set', usersSetOptions);
+  users.on('remove', usersSetOptions);
 };
 
 /**
@@ -8966,17 +8956,28 @@ UserCache.prototype._bindPlatformEvents = function(cb) {
  * @param {context} context A key context object for the event.
  */
 UserCache.prototype._updateUser = function(value, context) {
-  var self = this;
+  var path = context.key.split('/');
+  var userId = path[2];
+  var userKeyPath = path.slice(3);
 
-  // TODO : Do this more efficiently by just merging the new data in.
-  this._room.key('/.users/' + context.userId).get(function(err, user) {
-    if (err) {
-      throw err;
-    }
+  var user = this._users[userId];
 
-    self._users[user.id] = user;
-    self._emitter.emit('change', user, context.key);
-  });
+  var merge = {};
+  var currentKey = merge;
+
+  // Create structure of object to be merged
+  for (var i = 0; i < userKeyPath.length -1; i++) {
+    var key = userKeyPath[i];
+    currentKey[key] = {};
+    currentKey = currentKey[key];
+  }
+
+  var lastKey = _.last(userKeyPath);
+  currentKey[lastKey] = value;
+
+  _.merge(user, merge);
+
+  this._emitter.emit('change', user, context.key);
 };
 
 /**
@@ -8986,7 +8987,7 @@ UserCache.prototype._updateUser = function(value, context) {
  */
 UserCache.prototype._handleJoinEvent = function(user) {
   this._users[user.id] = user;
-  this._usersKeys[user.id] = this._room.key('/.users/' + user.id);
+  this._usersKeys[user.id] = this._room.user(user.id);
 
   this._emitter.emit('join', user);
 };
@@ -9017,7 +9018,6 @@ require.register("click-indicator/index.js", function(exports, require, module){
  */
 
 var Emitter = require('emitter');
-var async = require('async');
 var _ = require('lodash');
 
 var UserCache = require('usercache');
@@ -9087,12 +9087,8 @@ function ClickIndicator(opts) {
  *                      initialization is complete.
  */
 ClickIndicator.prototype.initialize = function(cb) {
-  var tasks = [
-    _.bind(this._userCache.initialize, this._userCache),
-    _.bind(this._indicatorHandler.initialize, this._indicatorHandler)
-  ];
-
-  async.series(tasks, cb);
+  this._indicatorHandler.initialize();
+  this._userCache.initialize(cb);
 };
 
 /**
@@ -9146,12 +9142,9 @@ ClickIndicator.prototype.destroy = function(cb) {
 
   self._view.destroy();
 
-  var tasks = [
-    _.bind(self._indicatorHandler.destroy, self._indicatorHandler),
-    _.bind(self._userCache.destroy, self._userCache)
-  ];
+  this._indicatorHandler.destroy();
 
-  async.series(tasks, cb);
+  this._userCache.destroy(cb);
 };
 
 /**
@@ -9239,18 +9232,11 @@ function IndicatorHandler(component) {
  * @public
  * @param {function} cb A callback function.
  */
-IndicatorHandler.prototype.initialize = function(cb) {
+IndicatorHandler.prototype.initialize = function() {
   this._channel = this._room.channel(this._namespace);
 
   this._clickHandler.on('click', this._eventHandler);
-
-  var self = this;
-  this._channel.on('message', this._messageHandler, function(err) {
-    if (err) {
-      self._emitter.emit('error', err);
-    }
-    cb(err);
-  });
+  this._channel.on('message', this._messageHandler);
 };
 
 /**
@@ -9276,7 +9262,7 @@ IndicatorHandler.prototype._eventHandler = function(data) {
   var self = this;
   this._channel.message(message, function(err) {
     if (err) {
-      self._emitter.emit('error', err);
+      self._emitOrThrow(err);
     }
   });
 };
@@ -9297,6 +9283,12 @@ IndicatorHandler.prototype._messageHandler = function(data, context) {
 
   // If the element doesn't exist don't try to show an indicator
   if (!element) {
+    var msg =
+      'ClickIndicator: Element not found. A remote user clicked on an element' +
+      ' that could not be found locally. See https://developers.goinstant.com' +
+      '/v1/widgets/click_indicator.html#element-matching for more details.';
+
+    this._emitOrThrow(new Error(msg));
     return;
   }
 
@@ -9342,9 +9334,23 @@ IndicatorHandler.prototype._messageHandler = function(data, context) {
  * @public
  * @param {function} cb A callback function.
  */
-IndicatorHandler.prototype.destroy = function(cb) {
+IndicatorHandler.prototype.destroy = function() {
   this._clickHandler.off('click', this._eventHandler);
-  this._channel.off('message', this._messageHandler, cb);
+  this._channel.off('message', this._messageHandler);
+};
+
+/**
+ * Emits the error if a listener is registered, otherwise throw the error
+ * @private
+ * @param {object} err An error object.
+ */
+IndicatorHandler.prototype._emitOrThrow = function(err) {
+  if (this._emitter.hasListeners('error')) {
+    this._emitter.emit('error', err);
+
+  } else {
+    throw err;
+  }
 };
 
 module.exports = IndicatorHandler;
@@ -9684,7 +9690,6 @@ ClickHandler.prototype._mouseupHandler = function(event) {
  */
 ClickHandler.prototype._validatedClick = function(event) {
   var element = event.target || event.srcElement;
-
   var location = {};
 
   // If the start position was never set we know this was a click event using
@@ -9745,8 +9750,10 @@ ClickHandler.prototype._getPosition = function(event) {
     return pos;
 
   } else { // IE 8
-    pos.x = event.clientX;
-    pos.y = event.clientY;
+    var scrollPos = scrollPosition.get();
+
+    pos.x = event.clientX + scrollPos.left;
+    pos.y = event.clientY + scrollPos.top;
     return pos;
   }
 };
