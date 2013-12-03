@@ -81,20 +81,14 @@
         var clickIndicator = new ClickIndicator(options);
 
         clickIndicator.initialize(function(err) {
-            if (err) throw err;
+          if (err) throw err;
 
-            // Set the container to the dynamic body size
-            $('.gi-override.gi-click-container').css({
-              "width": $(document).width(),
-              "height": $(document).height()
-            });
-
-            var $errorEl = $('#error');
-            clickIndicator.on('error', function(err) {
-              $errorEl.text(err.message);
-              $errorEl.parent().fadeIn();
-              window.setTimeout(function() {
-                $errorEl.parent().fadeOut();
+          var $errorEl = $('#error');
+          clickIndicator.on('error', function(err) {
+            $errorEl.text(err.message);
+            $errorEl.parent().fadeIn();
+            window.setTimeout(function() {
+              $errorEl.parent().fadeOut();
               }, 4000);
             });
           });
