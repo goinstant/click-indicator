@@ -1,5 +1,9 @@
 # Click Indicator Changelog
 
+### v1.2.1
+
+ - Container no longer handles overflow: hidden
+
 ### v1.2.0
 
 - Improved styling

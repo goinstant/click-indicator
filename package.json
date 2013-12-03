@@ -1,6 +1,6 @@
 {
   "name": "click-indicator",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "click-indicator",
   "main": "Gruntfile.js",
   "scripts": {
