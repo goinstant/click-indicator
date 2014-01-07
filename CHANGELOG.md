@@ -1,5 +1,9 @@
 # Click Indicator Changelog
 
+### v1.2.2
+
+- Removed deprecated code from docs
+
 ### v1.2.1
 
  - Container no longer handles overflow: hidden
