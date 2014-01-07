@@ -1,5 +1,6 @@
-/*global $, window, goinstant, console, jQuery */
+/*global $, window, goinstant, getOrSetRoomCookie */
 'use strict';
+var console=console||{"error":function(){}};
 
 function connect(options) {
   var connectUrl = 'https://goinstant.net/goinstant-services/docs';
@@ -7,8 +8,7 @@ function connect(options) {
 
   connection.connect(function(err, connection) {
     if (err) {
-      console.error('could not connect:', err);
-      return;
+      return console.error('could not connect:', err);
     }
 
     var roomName = getOrSetRoomCookie("clicking");
@@ -18,31 +18,28 @@ function connect(options) {
 
     currentRoom.join(function(err) {
       if (err) {
-        console.error('Error joining room:', err);
-        return;
+        return console.error('Error joining room:', err);
       }
 
-      currentRoom.user(function(err, user, userKey) {
-        userKey.key('displayName').set('Guest ' + options.guestId, function(err) {
-          if (err) {
-            console.log("Error setting userId", err);
-            return;
-          }
-        });
-        var color = options.guestId == "1" ? "#f00" : "#0f0";
-        userKey.key('avatarColor').set(color, function(err) {
-          if (err) {
-            return console.error(err);
-          }
-          // The user now appears red in the user-list, etc.
-        });
+      var color = options.guestId == "1" ? "#f00" : "#0f0";
+      var userKey = currentRoom.self();
+
+      userKey.key('displayName').set('Guest ' + options.guestId, function(err) {
+        if (err) {
+          return console.error("Error setting userId", err);
+        }
+      });
+      userKey.key('avatarColor').set(color, function(err) {
+        if (err) {
+          return console.error("Error setting avatarColor", err);
+        }
+        // The user now appears red in the user-list, etc.
       });
 
       var clickIndicator = new ClickIndicator({ room: currentRoom });
       clickIndicator.initialize(function(err) {
         if (err) {
-          console.log("Error initializing click-indicator:", err);
-          return;
+          return console.error("Error initializing click-indicator:", err);
         }
       });
     });
