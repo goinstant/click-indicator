@@ -41,6 +41,9 @@ var DEFAULT_OPTIONS = {
   namespace: ''
 };
 
+var DATA_GOINSTANT_ID = 'data-goinstant-id';
+var DATA_GOINSTANT_VALUE = 'gi-click';
+
 /**
  * A list of supported events to listen for.
  * @const
@@ -56,6 +59,7 @@ var SUPPORTED_EVENTS = [
  */
 function ClickIndicator(opts) {
   this._options = this._validateOptions(opts);
+  this._element = this._options.element;
 
   this._options.namespace = CHANNEL_NAMESPACE + this._options.namespace;
 
@@ -64,7 +68,7 @@ function ClickIndicator(opts) {
   this._view = new IndicatorView(this._options.namePlates,
                                  this._options.displayTimer);
 
-  this._clickHandler = new ClickHandler(this._options.element);
+  this._clickHandler = new ClickHandler(this._element);
 
   this._userCache = new UserCache(this._options.room);
   this._indicatorHandler = new IndicatorHandler(this);
@@ -77,6 +81,8 @@ function ClickIndicator(opts) {
  *                      initialization is complete.
  */
 ClickIndicator.prototype.initialize = function(cb) {
+  this._element.setAttribute(DATA_GOINSTANT_ID, DATA_GOINSTANT_VALUE);
+
   this._indicatorHandler.initialize();
   this._userCache.initialize(cb);
 };
@@ -131,8 +137,8 @@ ClickIndicator.prototype.destroy = function(cb) {
   this._emitter.off();
 
   self._view.destroy();
-
   this._indicatorHandler.destroy();
+  this._element.removeAttribute(DATA_GOINSTANT_ID);
 
   this._userCache.destroy(cb);
 };
